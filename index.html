@@ -163,10 +163,15 @@
   const db  = getDatabase(app);
 
   const PABELLONES = [
-    { id:'A', total:60  },
-    { id:'B', total:46  },
-    { id:'C', total:112 }
+    { id:'A', total:60,  start:86024 },
+    { id:'B', total:46,  start:86084 },
+    { id:'C', total:112, start:86130 }
   ];
+
+  function mesaCode(pab, i) {
+    const p = PABELLONES.find(p => p.id === pab);
+    return String(p.start + i - 1).padStart(6, '0');
+  }
 
   // local cache
   const state = {};
@@ -212,7 +217,7 @@
       const el = document.createElement('div');
       el.className = 'mesa';
       el.id = `mesa-${p.id}-${i}${sfx}`;
-      el.innerHTML = `<div class="m-code">${p.id}-${String(i).padStart(3,'0')}</div><div class="m-dot"></div><div class="m-time"></div>`;
+      el.innerHTML = `<div class="m-code">${mesaCode(p.id, i)}</div><div class="m-dot"></div><div class="m-time"></div>`;
       el.addEventListener('click', () => toggleMesa(p.id, i));
       grid.appendChild(el);
     }
@@ -318,8 +323,8 @@
   window.exportTxt = () => {
     const lines = [`=== APERTURA DE MESAS — ${new Date().toLocaleString('es-CL')} ===`,`Consulado General del Perú en Santiago · Elecciones Generales 2026`,``];
     PABELLONES.forEach(p => {
-      const openNums = Object.entries(state[p.id]).filter(([,s])=>s.open).map(([k,s])=>`${p.id}-${String(+k).padStart(3,'0')}(${s.time||'?'})`);
-      const pendNums = Object.entries(state[p.id]).filter(([,s])=>!s.open).map(([k])=>`${p.id}-${String(+k).padStart(3,'0')}`);
+      const openNums = Object.entries(state[p.id]).filter(([,s])=>s.open).map(([k,s])=>`${mesaCode(p.id,+k)}(${s.time||'?'})`);
+      const pendNums = Object.entries(state[p.id]).filter(([,s])=>!s.open).map(([k])=>mesaCode(p.id,+k));
       lines.push(`--- PABELLÓN ${p.id} (${openNums.length}/${p.total} abiertas) ---`);
       lines.push(`Abiertas  : ${openNums.join(', ')||'—'}`);
       lines.push(`Pendientes: ${pendNums.join(', ')||'—'}`);

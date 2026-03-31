@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Mesas — Consulado Perú en Santiago</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Libre+Franklin:wght@400;600;800&display=swap');
+  :root {
+    --bg:#0f0f0f;--surface:#181818;--surface2:#202020;--border:#2e2e2e;
+    --text:#f0ece4;--muted:#6b6560;
+    --peru-red:#d91023;--peru-red-dim:#7a0a14;
+    --open-bg:#0d1f0d;--open-border:#1e7a1e;--open-text:#3ecf3e;
+    --pending-bg:#141414;--pending-border:#3a3a3a;--pending-text:#888;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Libre Franklin',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+
+  /* HEADER */
+  header{background:var(--surface);border-bottom:2px solid var(--peru-red);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+  .header-left{display:flex;align-items:center;gap:14px}
+  .flag{display:flex;border-radius:4px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.1);flex-shrink:0}
+  .flag-stripe{width:10px;height:32px}
+  .flag-stripe.red{background:var(--peru-red)}
+  .flag-stripe.white{background:#f5f0e8}
+  .header-title h1{font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+  .header-title p{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px}
+  .stats-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;text-align:center;min-width:70px}
+  .stat-card .s-num{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:500;line-height:1}
+  .stat-card .s-lbl{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-top:3px}
+  .stat-card.s-open .s-num{color:var(--open-text)}
+  .stat-card.s-closed .s-num{color:#e05555}
+  .prog-wrap{display:flex;flex-direction:column;gap:4px}
+  .prog-bar-outer{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+  .prog-bar-inner{height:100%;background:linear-gradient(90deg,var(--peru-red-dim),var(--peru-red));border-radius:3px;transition:width .35s ease}
+  .prog-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:right}
+
+  /* SYNC INDICATOR */
+  .sync-badge{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--pending-border)}
+  .sync-badge.connected .sync-dot{background:var(--open-text);box-shadow:0 0 6px var(--open-text)}
+  .sync-badge.connected{color:var(--open-text);border-color:var(--open-border)}
+
+  /* TABS */
+  .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);padding:0 20px;overflow-x:auto}
+  .tab{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:10px 20px;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);white-space:nowrap;transition:all .15s;background:transparent;border-top:none;border-left:none;border-right:none;user-select:none}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--peru-red);border-bottom-color:var(--peru-red)}
+  .tab .tab-badge{display:inline-block;margin-left:6px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;font-size:10px;color:var(--muted)}
+  .tab.active .tab-badge{border-color:var(--peru-red-dim);color:var(--peru-red)}
+
+  /* MAIN */
+  main{flex:1;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+  .pabellon-section{display:none}
+  .pabellon-section.active{display:block}
+  .pabellon-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+  .pabellon-title{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+  .pabellon-stats{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mini-stat{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;color:var(--muted)}
+  .mini-stat .ms-num{font-weight:500}
+  .mini-stat.ms-open .ms-num{color:var(--open-text)}
+  .mini-stat.ms-closed .ms-num{color:#e05555}
+
+  /* GRID */
+  .mesa-grid{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-wrap:wrap;gap:6px}
+  .mesa{width:54px;height:54px;border-radius:8px;border:1px solid var(--pending-border);background:var(--pending-bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .15s,box-shadow .15s;user-select:none;flex-shrink:0;position:relative}
+  .mesa:hover{transform:translateY(-2px) scale(1.06);box-shadow:0 4px 16px rgba(0,0,0,.5)}
+  .m-code{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--pending-text);line-height:1;transition:color .2s}
+  .m-dot{width:5px;height:5px;border-radius:50%;background:var(--pending-text);opacity:.4;transition:background .2s,opacity .2s}
+  .m-time{position:absolute;bottom:4px;font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--open-text);opacity:.7;line-height:1}
+  .mesa.open{background:var(--open-bg);border-color:var(--open-border);box-shadow:0 0 8px rgba(62,207,62,.15)}
+  .mesa.open .m-code{color:var(--open-text)}
+  .mesa.open .m-dot{background:var(--open-text);opacity:1}
+  @keyframes popIn{0%{transform:scale(.88)}55%{transform:scale(1.09)}100%{transform:scale(1)}}
+  .mesa.pop{animation:popIn .28s ease-out forwards}
+
+  /* BOTTOM BAR */
+  .bottom-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .bb-time{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-right:auto}
+  .btn{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+  .btn:hover{border-color:var(--peru-red);color:var(--text);background:var(--surface2)}
+  .btn.danger:hover{border-color:#7a1a1a;color:#e05555}
+  .btn.copied{border-color:var(--open-border);color:var(--open-text)}
+
+  /* LOADING OVERLAY */
+  #loadingOverlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
+  #loadingOverlay.hidden{display:none}
+  .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--peru-red);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #loadingOverlay p{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="flag" style="margin-bottom:8px">
+    <div class="flag-stripe red"></div>
+    <div class="flag-stripe white"></div>
+    <div class="flag-stripe red"></div>
+  </div>
+  <div class="spinner"></div>
+  <p>Conectando con Firebase…</p>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <div class="flag">
+      <div class="flag-stripe red"></div>
+      <div class="flag-stripe white"></div>
+      <div class="flag-stripe red"></div>
+    </div>
+    <div class="header-title">
+      <h1>Control de Apertura de Mesas</h1>
+      <p>Consulado General del Perú en Santiago · Elecciones Generales 2026</p>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="sync-badge" id="syncBadge"><div class="sync-dot"></div><span id="syncLabel">Conectando…</span></div>
+    <div class="stat-card" style="min-width:60px"><div class="s-num">218</div><div class="s-lbl">Total</div></div>
+    <div class="stat-card s-open"><div class="s-num" id="globalOpen">0</div><div class="s-lbl">Abiertas</div></div>
+    <div class="stat-card s-closed"><div class="s-num" id="globalPending">218</div><div class="s-lbl">Pendientes</div></div>
+    <div class="prog-wrap">
+      <div class="prog-bar-outer"><div class="prog-bar-inner" id="globalBar" style="width:0%"></div></div>
+      <div class="prog-label" id="globalPct">0% aperturado</div>
+    </div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('all',this)">Todos <span class="tab-badge" id="badge-all">0/218</span></button>
+  <button class="tab" onclick="showTab('A',this)">Pabellón A <span class="tab-badge" id="badge-A">0/60</span></button>
+  <button class="tab" onclick="showTab('B',this)">Pabellón B <span class="tab-badge" id="badge-B">0/46</span></button>
+  <button class="tab" onclick="showTab('C',this)">Pabellón C <span class="tab-badge" id="badge-C">0/112</span></button>
+</div>
+
+<main id="mainContent"></main>
+
+<div class="bottom-bar">
+  <span class="bb-time" id="clockEl">—</span>
+  <button class="btn" id="exportBtn" onclick="exportTxt()">Exportar resumen</button>
+  <button class="btn danger" onclick="resetAll()">Resetear todo</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBFgAxWQhq4cvviKsZYq7koe9WUvE_8upk",
+    authDomain: "mesas-eg-2026.firebaseapp.com",
+    databaseURL: "https://mesas-eg-2026-default-rtdb.firebaseio.com",
+    projectId: "mesas-eg-2026",
+    storageBucket: "mesas-eg-2026.firebasestorage.app",
+    messagingSenderId: "430982540197",
+    appId: "1:430982540197:web:9e05e3f50ae191bc8f164c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  const PABELLONES = [
+    { id:'A', total:60  },
+    { id:'B', total:46  },
+    { id:'C', total:112 }
+  ];
+
+  // local cache
+  const state = {};
+  PABELLONES.forEach(p => {
+    state[p.id] = {};
+    for (let i = 1; i <= p.total; i++) state[p.id][i] = { open:false, time:null };
+  });
+
+  /* ── BUILD UI ── */
+  function buildAll() {
+    const main = document.getElementById('mainContent');
+    main.innerHTML = '';
+
+    const allSec = document.createElement('div');
+    allSec.className = 'pabellon-section active';
+    allSec.id = 'sec-all';
+    PABELLONES.forEach(p => allSec.appendChild(buildPabellon(p, true)));
+    main.appendChild(allSec);
+
+    PABELLONES.forEach(p => {
+      const sec = document.createElement('div');
+      sec.className = 'pabellon-section';
+      sec.id = 'sec-' + p.id;
+      sec.appendChild(buildPabellon(p, false));
+      main.appendChild(sec);
+    });
+  }
+
+  function buildPabellon(p, compact) {
+    const sfx = compact ? '-c' : '';
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="pabellon-header">
+        <div class="pabellon-title">Pabellón ${p.id} <span style="color:var(--muted);font-weight:400;font-size:11px">(${p.total} mesas)</span></div>
+        <div class="pabellon-stats">
+          <div class="mini-stat ms-open">Abiertas: <span class="ms-num" id="open-${p.id}${sfx}">0</span></div>
+          <div class="mini-stat ms-closed">Pendientes: <span class="ms-num" id="pend-${p.id}${sfx}">${p.total}</span></div>
+        </div>
+      </div>`;
+    const grid = document.createElement('div');
+    grid.className = 'mesa-grid';
+    for (let i = 1; i <= p.total; i++) {
+      const el = document.createElement('div');
+      el.className = 'mesa';
+      el.id = `mesa-${p.id}-${i}${sfx}`;
+      el.innerHTML = `<div class="m-code">${p.id}-${String(i).padStart(3,'0')}</div><div class="m-dot"></div><div class="m-time"></div>`;
+      el.addEventListener('click', () => toggleMesa(p.id, i));
+      grid.appendChild(el);
+    }
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  /* ── FIREBASE TOGGLE ── */
+  function toggleMesa(pab, num) {
+    const s     = state[pab][num];
+    const newOpen = !s.open;
+    const newTime = newOpen ? nowTime() : null;
+    const path  = `mesas/${pab}/${num}`;
+    update(ref(db), {
+      [`${path}/open`]: newOpen,
+      [`${path}/time`]: newTime
+    });
+  }
+
+  /* ── FIREBASE LISTENER (realtime) ── */
+  function listenFirebase() {
+    onValue(ref(db, 'mesas'), snapshot => {
+      const data = snapshot.val() || {};
+      PABELLONES.forEach(p => {
+        for (let i = 1; i <= p.total; i++) {
+          const remote = data[p.id]?.[i] || { open:false, time:null };
+          state[p.id][i] = { open: !!remote.open, time: remote.time || null };
+          renderMesa(p.id, i);
+        }
+      });
+      updateStats();
+      document.getElementById('loadingOverlay').classList.add('hidden');
+
+      // sync badge
+      const badge = document.getElementById('syncBadge');
+      badge.classList.add('connected');
+      document.getElementById('syncLabel').textContent = 'En línea · ' + nowTime();
+    });
+  }
+
+  /* ── RENDER MESA ── */
+  function renderMesa(pab, num) {
+    const s = state[pab][num];
+    ['', '-c'].forEach(sfx => {
+      const el = document.getElementById(`mesa-${pab}-${num}${sfx}`);
+      if (!el) return;
+      const wasOpen = el.classList.contains('open');
+      if (s.open) {
+        if (!wasOpen) { el.classList.add('open','pop'); setTimeout(()=>el.classList.remove('pop'),300); }
+        el.querySelector('.m-time').textContent = s.time || '';
+      } else {
+        el.classList.remove('open','pop');
+        el.querySelector('.m-time').textContent = '';
+      }
+    });
+  }
+
+  /* ── STATS ── */
+  function updateStats() {
+    let totalOpen = 0;
+    PABELLONES.forEach(p => {
+      const open = Object.values(state[p.id]).filter(s=>s.open).length;
+      totalOpen += open;
+      const pend = p.total - open;
+      ['','-c'].forEach(sfx => {
+        const oEl = document.getElementById('open-'+p.id+sfx);
+        const pEl = document.getElementById('pend-'+p.id+sfx);
+        if (oEl) oEl.textContent = open;
+        if (pEl) pEl.textContent = pend;
+      });
+      const badge = document.getElementById('badge-'+p.id);
+      if (badge) { badge.textContent = open+'/'+p.total; badge.style.color = open>0?'var(--open-text)':''; }
+    });
+    const pct = Math.round(totalOpen/218*100);
+    document.getElementById('globalOpen').textContent    = totalOpen;
+    document.getElementById('globalPending').textContent = 218-totalOpen;
+    document.getElementById('globalBar').style.width     = pct+'%';
+    document.getElementById('globalPct').textContent     = pct+'% aperturado';
+    document.getElementById('badge-all').textContent     = totalOpen+'/218';
+  }
+
+  /* ── TABS ── */
+  window.showTab = (id, btn) => {
+    document.querySelectorAll('.pabellon-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('sec-'+id).classList.add('active');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+  };
+
+  /* ── RESET ── */
+  window.resetAll = () => {
+    if (!confirm('¿Resetear TODAS las mesas a pendiente? Esta acción afecta a todos los monitores.')) return;
+    const updates = {};
+    PABELLONES.forEach(p => {
+      for (let i = 1; i <= p.total; i++) {
+        updates[`mesas/${p.id}/${i}`] = { open:false, time:null };
+      }
+    });
+    set(ref(db,'mesas'), null);
+  };
+
+  /* ── EXPORT ── */
+  window.exportTxt = () => {
+    const lines = [`=== APERTURA DE MESAS — ${new Date().toLocaleString('es-CL')} ===`,`Consulado General del Perú en Santiago · Elecciones Generales 2026`,``];
+    PABELLONES.forEach(p => {
+      const openNums = Object.entries(state[p.id]).filter(([,s])=>s.open).map(([k,s])=>`${p.id}-${String(+k).padStart(3,'0')}(${s.time||'?'})`);
+      const pendNums = Object.entries(state[p.id]).filter(([,s])=>!s.open).map(([k])=>`${p.id}-${String(+k).padStart(3,'0')}`);
+      lines.push(`--- PABELLÓN ${p.id} (${openNums.length}/${p.total} abiertas) ---`);
+      lines.push(`Abiertas  : ${openNums.join(', ')||'—'}`);
+      lines.push(`Pendientes: ${pendNums.join(', ')||'—'}`);
+      lines.push('');
+    });
+    const tot = PABELLONES.reduce((a,p)=>a+Object.values(state[p.id]).filter(s=>s.open).length,0);
+    lines.push(`TOTAL: ${tot}/218 mesas aperturadas (${Math.round(tot/218*100)}%)`);
+    navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+      const btn = document.getElementById('exportBtn');
+      btn.textContent='✓ Copiado'; btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='Exportar resumen';btn.classList.remove('copied');},2000);
+    }).catch(()=>alert(lines.join('\n')));
+  };
+
+  /* ── CLOCK ── */
+  function nowTime() { return new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}); }
+  function tick() { document.getElementById('clockEl').textContent = 'Hora actual: '+new Date().toLocaleString('es-CL'); }
+  setInterval(tick,1000); tick();
+
+  // INIT
+  buildAll();
+  listenFirebase();
+</script>
+</body>
+</html>

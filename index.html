@@ -430,19 +430,19 @@
         if(nEl) nEl.textContent=no;
         if(fEl) fEl.textContent=fus;
       });
-      const total=inst+no+fus;
+      const instTotal=inst+fus;
       const badge=document.getElementById('badge-'+p.id);
-      if(badge){badge.textContent=total+'/'+p.total; badge.style.color=total>0?'var(--installed-text)':'';}
+      if(badge){badge.textContent=instTotal+'/'+p.total; badge.style.color=instTotal>0?'var(--installed-text)':'';}
     });
-    const managed=gInst+gNo+gFus;
-    const pct=Math.round(managed/218*100);
+    const gInstTotal=gInst+gFus;
+    const pct=Math.round(gInstTotal/218*100);
     document.getElementById('globalInstalled').textContent=gInst;
     document.getElementById('globalNotInstalled').textContent=gNo;
     document.getElementById('globalMerged').textContent=gFus;
-    document.getElementById('progInstalled').style.width=Math.round(gInst/218*100)+'%';
-    document.getElementById('progMerged').style.width=Math.round(gFus/218*100)+'%';
-    document.getElementById('globalPct').textContent=pct+'% gestionado';
-    document.getElementById('badge-all').textContent=managed+'/218';
+    document.getElementById('progInstalled').style.width=Math.round(gInstTotal/218*100)+'%';
+    document.getElementById('progMerged').style.width='0%';
+    document.getElementById('globalPct').textContent=gInstTotal+'/218 instaladas ('+pct+'%)';
+    document.getElementById('badge-all').textContent=gInstTotal+'/218';
   }
 
   /* ── HELPERS ── */

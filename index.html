@@ -10,8 +10,10 @@
     --bg:#0f0f0f;--surface:#181818;--surface2:#202020;--border:#2e2e2e;
     --text:#f0ece4;--muted:#6b6560;
     --peru-red:#d91023;--peru-red-dim:#7a0a14;
-    --open-bg:#0d1f0d;--open-border:#1e7a1e;--open-text:#3ecf3e;
-    --pending-bg:#141414;--pending-border:#3a3a3a;--pending-text:#888;
+    --installed-bg:#0d1f0d;--installed-border:#1e7a1e;--installed-text:#3ecf3e;
+    --notinstalled-bg:#1a0d0d;--notinstalled-border:#7a1a1a;--notinstalled-text:#e05555;
+    --merged-bg:#1a1500;--merged-border:#7a6000;--merged-text:#f0b429;
+    --pending-bg:#141414;--pending-border:#3a3a3a;--pending-text:#666;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:'Libre Franklin',sans-serif;min-height:100vh;display:flex;flex-direction:column}
@@ -25,22 +27,23 @@
   .flag-stripe.white{background:#f5f0e8}
   .header-title h1{font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
   .header-title p{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px}
-  .stats-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;text-align:center;min-width:70px}
-  .stat-card .s-num{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:500;line-height:1}
+  .stats-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;text-align:center;min-width:64px}
+  .stat-card .s-num{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500;line-height:1}
   .stat-card .s-lbl{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-top:3px}
-  .stat-card.s-open .s-num{color:var(--open-text)}
-  .stat-card.s-closed .s-num{color:#e05555}
+  .stat-card.s-installed .s-num{color:var(--installed-text)}
+  .stat-card.s-notinstalled .s-num{color:var(--notinstalled-text)}
+  .stat-card.s-merged .s-num{color:var(--merged-text)}
   .prog-wrap{display:flex;flex-direction:column;gap:4px}
-  .prog-bar-outer{width:120px;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
-  .prog-bar-inner{height:100%;background:linear-gradient(90deg,var(--peru-red-dim),var(--peru-red));border-radius:3px;transition:width .35s ease}
+  .prog-bar-outer{width:110px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;display:flex}
+  .prog-seg{height:100%;transition:width .35s ease}
+  .prog-seg.installed{background:var(--installed-text)}
+  .prog-seg.merged{background:var(--merged-text)}
   .prog-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:right}
-
-  /* SYNC INDICATOR */
   .sync-badge{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px}
   .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--pending-border)}
-  .sync-badge.connected .sync-dot{background:var(--open-text);box-shadow:0 0 6px var(--open-text)}
-  .sync-badge.connected{color:var(--open-text);border-color:var(--open-border)}
+  .sync-badge.connected .sync-dot{background:var(--installed-text);box-shadow:0 0 6px var(--installed-text)}
+  .sync-badge.connected{color:var(--installed-text);border-color:var(--installed-border)}
 
   /* TABS */
   .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);padding:0 20px;overflow-x:auto}
@@ -56,24 +59,75 @@
   .pabellon-section.active{display:block}
   .pabellon-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
   .pabellon-title{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
-  .pabellon-stats{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pabellon-stats{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
   .mini-stat{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;color:var(--muted)}
   .mini-stat .ms-num{font-weight:500}
-  .mini-stat.ms-open .ms-num{color:var(--open-text)}
-  .mini-stat.ms-closed .ms-num{color:#e05555}
+  .mini-stat.ms-installed .ms-num{color:var(--installed-text)}
+  .mini-stat.ms-notinstalled .ms-num{color:var(--notinstalled-text)}
+  .mini-stat.ms-merged .ms-num{color:var(--merged-text)}
 
   /* GRID */
   .mesa-grid{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-wrap:wrap;gap:6px}
-  .mesa{width:54px;height:54px;border-radius:8px;border:1px solid var(--pending-border);background:var(--pending-bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .15s,box-shadow .15s;user-select:none;flex-shrink:0;position:relative}
-  .mesa:hover{transform:translateY(-2px) scale(1.06);box-shadow:0 4px 16px rgba(0,0,0,.5)}
+
+  /* MESA */
+  .mesa{width:72px;height:62px;border-radius:8px;border:1px solid var(--pending-border);background:var(--pending-bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .15s,box-shadow .15s;user-select:none;flex-shrink:0;position:relative;padding:4px}
+  .mesa:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 4px 16px rgba(0,0,0,.5)}
   .m-code{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--pending-text);line-height:1;transition:color .2s}
-  .m-dot{width:5px;height:5px;border-radius:50%;background:var(--pending-text);opacity:.4;transition:background .2s,opacity .2s}
-  .m-time{position:absolute;bottom:4px;font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--open-text);opacity:.7;line-height:1}
-  .mesa.open{background:var(--open-bg);border-color:var(--open-border);box-shadow:0 0 8px rgba(62,207,62,.15)}
-  .mesa.open .m-code{color:var(--open-text)}
-  .mesa.open .m-dot{background:var(--open-text);opacity:1}
+  .m-status{font-size:8px;color:var(--pending-text);opacity:.6;letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+  .m-extra{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--merged-text);opacity:.8;line-height:1;margin-top:1px;text-align:center}
+  .m-time{font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--muted);opacity:.6;line-height:1}
+
+  .mesa.installed{background:var(--installed-bg);border-color:var(--installed-border);box-shadow:0 0 8px rgba(62,207,62,.12)}
+  .mesa.installed .m-code{color:var(--installed-text)}
+  .mesa.installed .m-status{color:var(--installed-text);opacity:.7}
+
+  .mesa.notinstalled{background:var(--notinstalled-bg);border-color:var(--notinstalled-border);box-shadow:0 0 8px rgba(224,85,85,.12)}
+  .mesa.notinstalled .m-code{color:var(--notinstalled-text)}
+  .mesa.notinstalled .m-status{color:var(--notinstalled-text);opacity:.7}
+
+  .mesa.merged{background:var(--merged-bg);border-color:var(--merged-border);box-shadow:0 0 8px rgba(240,180,41,.12)}
+  .mesa.merged .m-code{color:var(--merged-text)}
+  .mesa.merged .m-status{color:var(--merged-text);opacity:.7}
+
   @keyframes popIn{0%{transform:scale(.88)}55%{transform:scale(1.09)}100%{transform:scale(1)}}
   .mesa.pop{animation:popIn .28s ease-out forwards}
+
+  /* POPUP */
+  .popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+  .popup-overlay.hidden{display:none}
+  .popup{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:300px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .popup-header{padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+  .popup-header h3{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+  .popup-header p{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px}
+  .popup-body{padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+
+  .state-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;cursor:pointer;transition:all .15s;width:100%;text-align:left}
+  .state-btn:hover{background:var(--surface2)}
+  .state-btn.active-state{border-color:currentColor}
+  .state-btn .sb-icon{font-size:18px;line-height:1}
+  .state-btn .sb-info{display:flex;flex-direction:column;gap:2px}
+  .state-btn .sb-label{font-size:13px;font-weight:600}
+  .state-btn .sb-desc{font-size:10px;color:var(--muted)}
+  .state-btn.btn-installed{color:var(--installed-text)}
+  .state-btn.btn-installed.active-state{background:var(--installed-bg);border-color:var(--installed-border)}
+  .state-btn.btn-notinstalled{color:var(--notinstalled-text)}
+  .state-btn.btn-notinstalled.active-state{background:var(--notinstalled-bg);border-color:var(--notinstalled-border)}
+  .state-btn.btn-merged{color:var(--merged-text)}
+  .state-btn.btn-merged.active-state{background:var(--merged-bg);border-color:var(--merged-border)}
+  .state-btn.btn-pending{color:var(--pending-text)}
+  .state-btn.btn-pending.active-state{background:var(--pending-bg);border-color:var(--pending-border)}
+
+  .merge-input-wrap{display:none;flex-direction:column;gap:6px;padding:10px 14px;background:var(--merged-bg);border:1px solid var(--merged-border);border-radius:10px;margin-top:2px}
+  .merge-input-wrap.visible{display:flex}
+  .merge-input-wrap label{font-size:11px;color:var(--merged-text);font-family:'IBM Plex Mono',monospace;letter-spacing:.05em;text-transform:uppercase}
+  .merge-input{font-family:'IBM Plex Mono',monospace;font-size:13px;padding:7px 10px;border-radius:6px;border:1px solid var(--merged-border);background:var(--surface);color:var(--text);outline:none;width:100%}
+  .merge-input:focus{border-color:var(--merged-text)}
+
+  .popup-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  .btn-cancel{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.05em}
+  .btn-cancel:hover{color:var(--text);border-color:var(--muted)}
+  .btn-confirm{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 16px;border-radius:6px;border:1px solid var(--peru-red-dim);background:var(--peru-red);color:#fff;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .btn-confirm:hover{background:#b8001d}
 
   /* BOTTOM BAR */
   .bottom-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -81,9 +135,14 @@
   .btn{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
   .btn:hover{border-color:var(--peru-red);color:var(--text);background:var(--surface2)}
   .btn.danger:hover{border-color:#7a1a1a;color:#e05555}
-  .btn.copied{border-color:var(--open-border);color:var(--open-text)}
+  .btn.copied{border-color:var(--installed-border);color:var(--installed-text)}
 
-  /* LOADING OVERLAY */
+  /* LEGEND */
+  .legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+  .leg-dot{width:8px;height:8px;border-radius:50%}
+
+  /* LOADING */
   #loadingOverlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
   #loadingOverlay.hidden{display:none}
   .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--peru-red);border-radius:50%;animation:spin .8s linear infinite}
@@ -96,21 +155,53 @@
 <!-- LOADING -->
 <div id="loadingOverlay">
   <div class="flag" style="margin-bottom:8px">
-    <div class="flag-stripe red"></div>
-    <div class="flag-stripe white"></div>
-    <div class="flag-stripe red"></div>
+    <div class="flag-stripe red"></div><div class="flag-stripe white"></div><div class="flag-stripe red"></div>
   </div>
   <div class="spinner"></div>
   <p>Conectando con Firebase…</p>
+</div>
+
+<!-- POPUP -->
+<div class="popup-overlay hidden" id="popupOverlay">
+  <div class="popup">
+    <div class="popup-header">
+      <h3 id="popupTitle">Mesa 000000</h3>
+      <p id="popupSub">Selecciona el estado de la mesa</p>
+    </div>
+    <div class="popup-body">
+      <button class="state-btn btn-installed" onclick="selectState('installed')">
+        <span class="sb-icon">🟢</span>
+        <div class="sb-info"><span class="sb-label">Instalada</span><span class="sb-desc">Mesa aperturada correctamente</span></div>
+      </button>
+      <button class="state-btn btn-notinstalled" onclick="selectState('notinstalled')">
+        <span class="sb-icon">🔴</span>
+        <div class="sb-info"><span class="sb-label">No instalada</span><span class="sb-desc">Mesa no pudo aperturarse</span></div>
+      </button>
+      <button class="state-btn btn-merged" onclick="selectState('merged')">
+        <span class="sb-icon">🟡</span>
+        <div class="sb-info"><span class="sb-label">Fusionada</span><span class="sb-desc">Se une con otra mesa contigua</span></div>
+      </button>
+      <div class="merge-input-wrap" id="mergeInputWrap">
+        <label>Número de mesa con la que se fusiona</label>
+        <input class="merge-input" id="mergeInput" type="text" placeholder="Ej: 086025" maxlength="6">
+      </div>
+      <button class="state-btn btn-pending" onclick="selectState('pending')">
+        <span class="sb-icon">⬜</span>
+        <div class="sb-info"><span class="sb-label">Pendiente</span><span class="sb-desc">Restablecer a sin estado</span></div>
+      </button>
+    </div>
+    <div class="popup-footer">
+      <button class="btn-cancel" onclick="closePopup()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmState()">Confirmar</button>
+    </div>
+  </div>
 </div>
 
 <!-- HEADER -->
 <header>
   <div class="header-left">
     <div class="flag">
-      <div class="flag-stripe red"></div>
-      <div class="flag-stripe white"></div>
-      <div class="flag-stripe red"></div>
+      <div class="flag-stripe red"></div><div class="flag-stripe white"></div><div class="flag-stripe red"></div>
     </div>
     <div class="header-title">
       <h1>Control de Apertura de Mesas</h1>
@@ -119,12 +210,16 @@
   </div>
   <div class="stats-row">
     <div class="sync-badge" id="syncBadge"><div class="sync-dot"></div><span id="syncLabel">Conectando…</span></div>
-    <div class="stat-card" style="min-width:60px"><div class="s-num">218</div><div class="s-lbl">Total</div></div>
-    <div class="stat-card s-open"><div class="s-num" id="globalOpen">0</div><div class="s-lbl">Abiertas</div></div>
-    <div class="stat-card s-closed"><div class="s-num" id="globalPending">218</div><div class="s-lbl">Pendientes</div></div>
+    <div class="stat-card"><div class="s-num">218</div><div class="s-lbl">Total</div></div>
+    <div class="stat-card s-installed"><div class="s-num" id="globalInstalled">0</div><div class="s-lbl">Instaladas</div></div>
+    <div class="stat-card s-notinstalled"><div class="s-num" id="globalNotInstalled">0</div><div class="s-lbl">No inst.</div></div>
+    <div class="stat-card s-merged"><div class="s-num" id="globalMerged">0</div><div class="s-lbl">Fusionadas</div></div>
     <div class="prog-wrap">
-      <div class="prog-bar-outer"><div class="prog-bar-inner" id="globalBar" style="width:0%"></div></div>
-      <div class="prog-label" id="globalPct">0% aperturado</div>
+      <div class="prog-bar-outer">
+        <div class="prog-seg installed" id="progInstalled" style="width:0%"></div>
+        <div class="prog-seg merged" id="progMerged" style="width:0%"></div>
+      </div>
+      <div class="prog-label" id="globalPct">0% gestionado</div>
     </div>
   </div>
 </header>
@@ -140,7 +235,13 @@
 <main id="mainContent"></main>
 
 <div class="bottom-bar">
-  <span class="bb-time" id="clockEl">—</span>
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:var(--installed-text)"></div>Instalada</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--notinstalled-text)"></div>No instalada</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--merged-text)"></div>Fusionada</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--pending-border)"></div>Pendiente</div>
+  </div>
+  <span class="bb-time" id="clockEl" style="margin-left:auto">—</span>
   <button class="btn" id="exportBtn" onclick="exportTxt()">Exportar resumen</button>
   <button class="btn danger" onclick="resetAll()">Resetear todo</button>
 </div>
@@ -169,138 +270,189 @@
   ];
 
   function mesaCode(pab, i) {
-    const p = PABELLONES.find(p => p.id === pab);
-    return String(p.start + i - 1).padStart(6, '0');
+    const p = PABELLONES.find(p=>p.id===pab);
+    return String(p.start + i - 1).padStart(6,'0');
   }
 
-  // local cache
+  // state
   const state = {};
   PABELLONES.forEach(p => {
     state[p.id] = {};
-    for (let i = 1; i <= p.total; i++) state[p.id][i] = { open:false, time:null };
+    for (let i=1;i<=p.total;i++) state[p.id][i]={status:'pending',mergedWith:null,time:null};
   });
+
+  // popup state
+  let popupPab=null, popupNum=null, selectedState=null;
 
   /* ── BUILD UI ── */
   function buildAll() {
     const main = document.getElementById('mainContent');
-    main.innerHTML = '';
-
-    const allSec = document.createElement('div');
-    allSec.className = 'pabellon-section active';
-    allSec.id = 'sec-all';
-    PABELLONES.forEach(p => allSec.appendChild(buildPabellon(p, true)));
+    main.innerHTML='';
+    const allSec=document.createElement('div');
+    allSec.className='pabellon-section active'; allSec.id='sec-all';
+    PABELLONES.forEach(p=>allSec.appendChild(buildPabellon(p,true)));
     main.appendChild(allSec);
-
-    PABELLONES.forEach(p => {
-      const sec = document.createElement('div');
-      sec.className = 'pabellon-section';
-      sec.id = 'sec-' + p.id;
-      sec.appendChild(buildPabellon(p, false));
+    PABELLONES.forEach(p=>{
+      const sec=document.createElement('div');
+      sec.className='pabellon-section'; sec.id='sec-'+p.id;
+      sec.appendChild(buildPabellon(p,false));
       main.appendChild(sec);
     });
   }
 
-  function buildPabellon(p, compact) {
-    const sfx = compact ? '-c' : '';
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `
+  function buildPabellon(p,compact) {
+    const sfx=compact?'-c':'';
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`
       <div class="pabellon-header">
         <div class="pabellon-title">Pabellón ${p.id} <span style="color:var(--muted);font-weight:400;font-size:11px">(${p.total} mesas)</span></div>
         <div class="pabellon-stats">
-          <div class="mini-stat ms-open">Abiertas: <span class="ms-num" id="open-${p.id}${sfx}">0</span></div>
-          <div class="mini-stat ms-closed">Pendientes: <span class="ms-num" id="pend-${p.id}${sfx}">${p.total}</span></div>
+          <div class="mini-stat ms-installed">🟢 <span class="ms-num" id="inst-${p.id}${sfx}">0</span></div>
+          <div class="mini-stat ms-notinstalled">🔴 <span class="ms-num" id="noinst-${p.id}${sfx}">0</span></div>
+          <div class="mini-stat ms-merged">🟡 <span class="ms-num" id="fus-${p.id}${sfx}">0</span></div>
         </div>
       </div>`;
-    const grid = document.createElement('div');
-    grid.className = 'mesa-grid';
-    for (let i = 1; i <= p.total; i++) {
-      const el = document.createElement('div');
-      el.className = 'mesa';
-      el.id = `mesa-${p.id}-${i}${sfx}`;
-      el.innerHTML = `<div class="m-code">${mesaCode(p.id, i)}</div><div class="m-dot"></div><div class="m-time"></div>`;
-      el.addEventListener('click', () => toggleMesa(p.id, i));
+    const grid=document.createElement('div');
+    grid.className='mesa-grid';
+    for(let i=1;i<=p.total;i++){
+      const el=document.createElement('div');
+      el.className='mesa';
+      el.id=`mesa-${p.id}-${i}${sfx}`;
+      el.innerHTML=`<div class="m-code">${mesaCode(p.id,i)}</div><div class="m-status">Pendiente</div><div class="m-extra"></div><div class="m-time"></div>`;
+      el.addEventListener('click',()=>openPopup(p.id,i));
       grid.appendChild(el);
     }
     wrap.appendChild(grid);
     return wrap;
   }
 
-  /* ── FIREBASE TOGGLE ── */
-  function toggleMesa(pab, num) {
-    const s     = state[pab][num];
-    const newOpen = !s.open;
-    const newTime = newOpen ? nowTime() : null;
-    const path  = `mesas/${pab}/${num}`;
-    update(ref(db), {
-      [`${path}/open`]: newOpen,
-      [`${path}/time`]: newTime
+  /* ── POPUP ── */
+  window.openPopup = (pab,num) => {
+    popupPab=pab; popupNum=num;
+    selectedState=state[pab][num].status;
+    document.getElementById('popupTitle').textContent='Mesa '+mesaCode(pab,num);
+    document.getElementById('popupSub').textContent='Pabellón '+pab+' · Estado actual: '+labelFor(selectedState);
+    document.getElementById('mergeInput').value=state[pab][num].mergedWith||'';
+    renderStateBtns();
+    document.getElementById('mergeInputWrap').classList.toggle('visible', selectedState==='merged');
+    document.getElementById('popupOverlay').classList.remove('hidden');
+  };
+
+  window.closePopup = () => {
+    document.getElementById('popupOverlay').classList.add('hidden');
+    popupPab=null; popupNum=null; selectedState=null;
+  };
+
+  window.selectState = (s) => {
+    selectedState=s;
+    renderStateBtns();
+    document.getElementById('mergeInputWrap').classList.toggle('visible', s==='merged');
+    if(s==='merged') document.getElementById('mergeInput').focus();
+  };
+
+  function renderStateBtns() {
+    document.querySelectorAll('.state-btn').forEach(b=>{
+      b.classList.toggle('active-state', b.classList.contains('btn-'+selectedState));
     });
   }
 
-  /* ── FIREBASE LISTENER (realtime) ── */
+  window.confirmState = () => {
+    if(!popupPab) return;
+    let mergedWith=null;
+    if(selectedState==='merged'){
+      mergedWith=document.getElementById('mergeInput').value.trim();
+      if(!mergedWith){ document.getElementById('mergeInput').focus(); return; }
+    }
+    const time=nowTime();
+    update(ref(db),{
+      [`mesas/${popupPab}/${popupNum}/status`]: selectedState,
+      [`mesas/${popupPab}/${popupNum}/mergedWith`]: mergedWith,
+      [`mesas/${popupPab}/${popupNum}/time`]: selectedState==='pending'?null:time
+    });
+    closePopup();
+  };
+
+  // close on overlay click
+  document.getElementById('popupOverlay').addEventListener('click', e=>{
+    if(e.target===document.getElementById('popupOverlay')) closePopup();
+  });
+
+  /* ── FIREBASE ── */
   function listenFirebase() {
-    onValue(ref(db, 'mesas'), snapshot => {
-      const data = snapshot.val() || {};
-      PABELLONES.forEach(p => {
-        for (let i = 1; i <= p.total; i++) {
-          const remote = data[p.id]?.[i] || { open:false, time:null };
-          state[p.id][i] = { open: !!remote.open, time: remote.time || null };
-          renderMesa(p.id, i);
+    onValue(ref(db,'mesas'), snapshot=>{
+      const data=snapshot.val()||{};
+      PABELLONES.forEach(p=>{
+        for(let i=1;i<=p.total;i++){
+          const r=data[p.id]?.[i]||{status:'pending',mergedWith:null,time:null};
+          state[p.id][i]={status:r.status||'pending',mergedWith:r.mergedWith||null,time:r.time||null};
+          renderMesa(p.id,i);
         }
       });
       updateStats();
       document.getElementById('loadingOverlay').classList.add('hidden');
-
-      // sync badge
-      const badge = document.getElementById('syncBadge');
+      const badge=document.getElementById('syncBadge');
       badge.classList.add('connected');
-      document.getElementById('syncLabel').textContent = 'En línea · ' + nowTime();
+      document.getElementById('syncLabel').textContent='En línea · '+nowTime();
     });
   }
 
   /* ── RENDER MESA ── */
-  function renderMesa(pab, num) {
-    const s = state[pab][num];
-    ['', '-c'].forEach(sfx => {
-      const el = document.getElementById(`mesa-${pab}-${num}${sfx}`);
-      if (!el) return;
-      const wasOpen = el.classList.contains('open');
-      if (s.open) {
-        if (!wasOpen) { el.classList.add('open','pop'); setTimeout(()=>el.classList.remove('pop'),300); }
-        el.querySelector('.m-time').textContent = s.time || '';
-      } else {
-        el.classList.remove('open','pop');
-        el.querySelector('.m-time').textContent = '';
-      }
+  function renderMesa(pab,num) {
+    const s=state[pab][num];
+    ['','-c'].forEach(sfx=>{
+      const el=document.getElementById(`mesa-${pab}-${num}${sfx}`);
+      if(!el) return;
+      el.className='mesa '+(s.status!=='pending'?s.status:'');
+      el.querySelector('.m-code').textContent=mesaCode(pab,num);
+      el.querySelector('.m-status').textContent=labelFor(s.status);
+      el.querySelector('.m-extra').textContent=s.status==='merged'&&s.mergedWith?'↔ '+s.mergedWith:'';
+      el.querySelector('.m-time').textContent=s.time||'';
     });
   }
 
   /* ── STATS ── */
   function updateStats() {
-    let totalOpen = 0;
-    PABELLONES.forEach(p => {
-      const open = Object.values(state[p.id]).filter(s=>s.open).length;
-      totalOpen += open;
-      const pend = p.total - open;
-      ['','-c'].forEach(sfx => {
-        const oEl = document.getElementById('open-'+p.id+sfx);
-        const pEl = document.getElementById('pend-'+p.id+sfx);
-        if (oEl) oEl.textContent = open;
-        if (pEl) pEl.textContent = pend;
+    let gInst=0,gNo=0,gFus=0;
+    PABELLONES.forEach(p=>{
+      let inst=0,no=0,fus=0;
+      for(let i=1;i<=p.total;i++){
+        const s=state[p.id][i].status;
+        if(s==='installed') inst++;
+        else if(s==='notinstalled') no++;
+        else if(s==='merged') fus++;
+      }
+      gInst+=inst; gNo+=no; gFus+=fus;
+      ['','-c'].forEach(sfx=>{
+        const iEl=document.getElementById('inst-'+p.id+sfx);
+        const nEl=document.getElementById('noinst-'+p.id+sfx);
+        const fEl=document.getElementById('fus-'+p.id+sfx);
+        if(iEl) iEl.textContent=inst;
+        if(nEl) nEl.textContent=no;
+        if(fEl) fEl.textContent=fus;
       });
-      const badge = document.getElementById('badge-'+p.id);
-      if (badge) { badge.textContent = open+'/'+p.total; badge.style.color = open>0?'var(--open-text)':''; }
+      const total=inst+no+fus;
+      const badge=document.getElementById('badge-'+p.id);
+      if(badge){badge.textContent=total+'/'+p.total; badge.style.color=total>0?'var(--installed-text)':'';}
     });
-    const pct = Math.round(totalOpen/218*100);
-    document.getElementById('globalOpen').textContent    = totalOpen;
-    document.getElementById('globalPending').textContent = 218-totalOpen;
-    document.getElementById('globalBar').style.width     = pct+'%';
-    document.getElementById('globalPct').textContent     = pct+'% aperturado';
-    document.getElementById('badge-all').textContent     = totalOpen+'/218';
+    const managed=gInst+gNo+gFus;
+    const pct=Math.round(managed/218*100);
+    document.getElementById('globalInstalled').textContent=gInst;
+    document.getElementById('globalNotInstalled').textContent=gNo;
+    document.getElementById('globalMerged').textContent=gFus;
+    document.getElementById('progInstalled').style.width=Math.round(gInst/218*100)+'%';
+    document.getElementById('progMerged').style.width=Math.round(gFus/218*100)+'%';
+    document.getElementById('globalPct').textContent=pct+'% gestionado';
+    document.getElementById('badge-all').textContent=managed+'/218';
   }
 
+  /* ── HELPERS ── */
+  function labelFor(s){
+    return s==='installed'?'Instalada':s==='notinstalled'?'No instalada':s==='merged'?'Fusionada':'Pendiente';
+  }
+  function nowTime(){ return new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}); }
+
   /* ── TABS ── */
-  window.showTab = (id, btn) => {
+  window.showTab=(id,btn)=>{
     document.querySelectorAll('.pabellon-section').forEach(s=>s.classList.remove('active'));
     document.getElementById('sec-'+id).classList.add('active');
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -308,43 +460,43 @@
   };
 
   /* ── RESET ── */
-  window.resetAll = () => {
-    if (!confirm('¿Resetear TODAS las mesas a pendiente? Esta acción afecta a todos los monitores.')) return;
-    const updates = {};
-    PABELLONES.forEach(p => {
-      for (let i = 1; i <= p.total; i++) {
-        updates[`mesas/${p.id}/${i}`] = { open:false, time:null };
-      }
-    });
-    set(ref(db,'mesas'), null);
+  window.resetAll=()=>{
+    if(!confirm('¿Resetear TODAS las mesas? Esta acción afecta a todos los monitores.')) return;
+    set(ref(db,'mesas'),null);
   };
 
   /* ── EXPORT ── */
-  window.exportTxt = () => {
-    const lines = [`=== APERTURA DE MESAS — ${new Date().toLocaleString('es-CL')} ===`,`Consulado General del Perú en Santiago · Elecciones Generales 2026`,``];
-    PABELLONES.forEach(p => {
-      const openNums = Object.entries(state[p.id]).filter(([,s])=>s.open).map(([k,s])=>`${mesaCode(p.id,+k)}(${s.time||'?'})`);
-      const pendNums = Object.entries(state[p.id]).filter(([,s])=>!s.open).map(([k])=>mesaCode(p.id,+k));
-      lines.push(`--- PABELLÓN ${p.id} (${openNums.length}/${p.total} abiertas) ---`);
-      lines.push(`Abiertas  : ${openNums.join(', ')||'—'}`);
-      lines.push(`Pendientes: ${pendNums.join(', ')||'—'}`);
+  window.exportTxt=()=>{
+    const lines=[`=== APERTURA DE MESAS — ${new Date().toLocaleString('es-CL')} ===`,`Consulado General del Perú en Santiago · Elecciones Generales 2026`,``];
+    PABELLONES.forEach(p=>{
+      const inst=[], noInst=[], fus=[], pend=[];
+      for(let i=1;i<=p.total;i++){
+        const s=state[p.id][i]; const code=mesaCode(p.id,i);
+        if(s.status==='installed') inst.push(`${code}(${s.time||'?'})`);
+        else if(s.status==='notinstalled') noInst.push(code);
+        else if(s.status==='merged') fus.push(`${code}↔${s.mergedWith||'?'}`);
+        else pend.push(code);
+      }
+      lines.push(`--- PABELLÓN ${p.id} ---`);
+      lines.push(`✅ Instaladas (${inst.length})   : ${inst.join(', ')||'—'}`);
+      lines.push(`❌ No instaladas (${noInst.length}): ${noInst.join(', ')||'—'}`);
+      lines.push(`🔀 Fusionadas (${fus.length})    : ${fus.join(', ')||'—'}`);
+      lines.push(`⏳ Pendientes (${pend.length})   : ${pend.join(', ')||'—'}`);
       lines.push('');
     });
-    const tot = PABELLONES.reduce((a,p)=>a+Object.values(state[p.id]).filter(s=>s.open).length,0);
-    lines.push(`TOTAL: ${tot}/218 mesas aperturadas (${Math.round(tot/218*100)}%)`);
+    const tot=PABELLONES.reduce((a,p)=>a+Object.values(state[p.id]).filter(s=>s.status!=='pending').length,0);
+    lines.push(`TOTAL GESTIONADAS: ${tot}/218 (${Math.round(tot/218*100)}%)`);
     navigator.clipboard.writeText(lines.join('\n')).then(()=>{
-      const btn = document.getElementById('exportBtn');
+      const btn=document.getElementById('exportBtn');
       btn.textContent='✓ Copiado'; btn.classList.add('copied');
       setTimeout(()=>{btn.textContent='Exportar resumen';btn.classList.remove('copied');},2000);
     }).catch(()=>alert(lines.join('\n')));
   };
 
   /* ── CLOCK ── */
-  function nowTime() { return new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}); }
-  function tick() { document.getElementById('clockEl').textContent = 'Hora actual: '+new Date().toLocaleString('es-CL'); }
+  function tick(){ document.getElementById('clockEl').textContent='Hora: '+new Date().toLocaleString('es-CL'); }
   setInterval(tick,1000); tick();
 
-  // INIT
   buildAll();
   listenFirebase();
 </script>

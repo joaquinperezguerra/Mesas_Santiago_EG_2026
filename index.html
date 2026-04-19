@@ -244,21 +244,7 @@
   <span class="bb-time" id="clockEl" style="margin-left:auto">—</span>
   <button class="btn" id="exportBtn" onclick="exportTxt()">Exportar resumen</button>
   <button class="btn danger" onclick="resetAll()">Resetear todo</button>
-</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBFgAxWQhq4cvviKsZYq7koe9WUvE_8upk",
-    authDomain: "mesas-eg-2026.firebaseapp.com",
-    databaseURL: "https://mesas-eg-2026-default-rtdb.firebaseio.com",
-    projectId: "mesas-eg-2026",
-    storageBucket: "mesas-eg-2026.firebasestorage.app",
-    messagingSenderId: "430982540197",
-    appId: "1:430982540197:web:9e05e3f50ae191bc8f164c"
-  };
+</div>;
 
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
